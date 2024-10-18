@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import { PORT, SECRET_WEB_TOKEN } from './config.js'
@@ -6,6 +7,7 @@ import { userRepository } from './user-repository.js'
 
 const app = express()
 
+app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 
@@ -27,13 +29,17 @@ app.get('/', (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body
+  const { email, password } = req.body
 
   try {
-    const user = await userRepository.login({ username, password })
-    const token = jwt.sign({ id: user._id, username: user.username }, SECRET_WEB_TOKEN, {
-      expiresIn: '1h'
-    })
+    const user = await userRepository.login({ email, password })
+    const token = jwt.sign(
+      { id: user.id, user: user.user, email: user.email },
+      SECRET_WEB_TOKEN,
+      {
+        expiresIn: '1h'
+      }
+    )
     res
       .cookie('access_token', token, {
         httpOnly: true,
@@ -46,10 +52,10 @@ app.post('/login', async (req, res) => {
 })
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body
+  const { username, email, password } = req.body
 
   try {
-    const id = await userRepository.create({ username, password })
+    const id = await userRepository.create({ username, email, password })
     res.send({ id })
   } catch (error) {
     res.status(400).send(error.message)
@@ -57,9 +63,14 @@ app.post('/register', async (req, res) => {
 })
 
 app.post('/logout', (req, res) => {
-  req
-    .clearCookie('access_token')
-    .json({ message: 'Logout succesful' })
+  req.clearCookie('access_token').json({ message: 'Logout succesful' })
+})
+
+app.get('/getAllUsers', async (req, res) => {
+  try {
+    const users = await userRepository.getUsers()
+    res.status(200).send(users)
+  } catch {}
 })
 
 app.get('/protected', (req, res) => {
