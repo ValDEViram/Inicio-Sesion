@@ -7,11 +7,12 @@ const User = Schema('User', {
   _id: { type: String, required: true },
   username: { type: String, required: true },
   email: { type: String, required: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  rol: { type: String, required: true }
 })
 
 export class userRepository {
-  static async create ({ username, email, password }) {
+  static async create ({ username, email, password, rol }) {
     Validation.username(username)
     Validation.password(password)
     const user = await User.findOne({ email })
@@ -24,7 +25,8 @@ export class userRepository {
       _id: id,
       username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      rol: rol != null ? rol : 'Usuario'
     }).save()
 
     return id
@@ -42,7 +44,8 @@ export class userRepository {
     return {
       id: user._id,
       user: user.username,
-      email: user.email
+      email: user.email,
+      rol: user.rol
     }
   }
 
@@ -62,7 +65,7 @@ class Validation {
       )
     }
 
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/
+    const usernameRegex = /^[a-zA-Z0-9_\-\s]+$/
     if (!usernameRegex.test(username)) {
       throw new Error(
         'El usuario no puede contener caracteres especiales, solo se permiten letras, números, guiones (-) y guiones bajos (_)'
