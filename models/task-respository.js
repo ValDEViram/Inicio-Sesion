@@ -7,11 +7,12 @@ const Plan = Schema('Plan', {
   name: { type: String, required: true },
   tasks: { type: Array, default: [] },
   rewards: { type: Array, default: [] },
+  visibility: { type: String, required: true },
   timestamp: { type: String, default: () => new Date().toISOString() }
 })
 
 export class planRepository {
-  static async createPlan ({ name, tasks, rewards }) {
+  static async createPlan ({ name, tasks, rewards, visibility }) {
     const id = crypto.randomUUID()
 
     // Crear un nuevo plan con un nombre
@@ -20,11 +21,18 @@ export class planRepository {
       name,
       tasks,
       rewards,
+      visibility,
       timestamp: new Date().toISOString()
     })
     await newPlan.save()
 
     return newPlan
+  }
+
+  static async getPlans () {
+    const plans = await Plan.find({})
+    if (!plans) throw new Error('Aún no hay planes registrados')
+    return plans
   }
 
   static async getPlan (id) {
@@ -33,11 +41,11 @@ export class planRepository {
     return plan
   }
 
-  static async addTaskToPlan (id, task) {
+  static async addTaskToPlan (id, todoTasks) {
     const plan = await Plan.findOne({ _id: id })
     if (!plan) throw new Error('Plan no encontrado')
 
-    plan.tasks.push(task) // Agregar una nueva tarea
+    plan.tasks.push({ todoTasks, completed: 'false' }) // Agregar una nueva tarea
     await plan.save()
 
     return plan
