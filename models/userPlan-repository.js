@@ -1,5 +1,5 @@
 import DBLocal from 'db-local'
-import { planRepository } from './task-respository'
+import { planRepository } from './task-respository.js'
 
 const { Schema } = new DBLocal({ path: './db' })
 
@@ -13,14 +13,17 @@ const UserPlan = Schema('UserPlan', {
 })
 
 export class userPlanRepository {
-  static async createUserPlan (userID, planID) {
+  static async createUserPlan ({ userID, planID }) {
+    const userPlanRef = UserPlan.findOne({ userID, planID })
+    if (userPlanRef) throw new Error('Ya se ha agregado este plan')
     const plan = await planRepository.getPlan(planID)
-    if (!plan) throw new Error('Plan no encontrado')
+    if (!plan) throw new Error('Plan no encontrado en la base de datos')
 
     const newUserPlans = UserPlan.create({
       _id: crypto.randomUUID(),
       userID,
       planID,
+      planName: plan.name,
       tasks: plan.tasks.map((task) => (
         {
           task,
@@ -33,7 +36,7 @@ export class userPlanRepository {
     return newUserPlans
   }
 
-  static async getUserPlans (userID) {
+  static async getUserPlans ({ userID }) {
     const userPlans = await UserPlan.find({ userID })
     if (!userPlans) throw new Error('No se encontraron planes para este usuario')
 

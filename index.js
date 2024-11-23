@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 import { PORT, SECRET_WEB_TOKEN } from './config.js'
 import userRouter from './controllers/user-controller.js'
 import taskRouter from './controllers/task-controller.js'
+import userPlansRouter from './controllers/userPlan-controller.js'
 
 const app = express()
 
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 
 app.use('/plans', taskRouter)
 app.use('/users', userRouter)
+app.use('/userplans', userPlansRouter)
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`)
